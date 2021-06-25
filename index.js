@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const MongoClient = require('mongodb').MongoClient;
+const { ObjectId } = require('mongodb');
 require('dotenv').config();
 app.use(bodyParser.json());
 app.use(cors());
@@ -25,12 +26,35 @@ client.connect(err => {
                 res.send(result.insertedCount > 0)
             })
     })
+
+    //read blogs from database
+    app.get('/blogs', (req, res) => {
+        blogCollection.find({}) 
+            .toArray((err, documents) => {
+                res.send(documents);
+                console.log(err);
+            })
+    })
+
+    //read individual blog from database
+    app.get('/blog/:blogId', (req, res) => {
+      blogCollection.find({_id:ObjectId(req.params.blogId)})
+      .toArray((err, blogs) => {
+          res.send(blogs[0]);
+      })
+  })
+
+    //delete blog from database
+    app.delete('/deleteBlog/:id', (req, res) => {
+      blogCollection.deleteOne({_id: ObjectId(req.params.id)})
+      .then(result => {
+        res.send(result.deletedCount > 0);
+      })
+    })
   });
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
-app.listen(port, () => {
-  console.log("Backend is running perfectly and fine");
-})
+app.listen(process.env.PORT || port);
